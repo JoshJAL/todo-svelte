@@ -1,10 +1,11 @@
 <script>
   import { addTodo } from '../stores/todoStore';
+  import { user } from '../stores/authStore';
 
   let todo = '';
 
   function handleSubmit() {
-    addTodo(todo);
+    addTodo(todo, $user.id);
     todo = '';
   }
 </script>
@@ -20,7 +21,9 @@
       bind:value={todo}
     />
   </div>
-  <button type="submit" class="w-full shadow-sm rounded bg-blue-500 hover:bg-blue-600 text-white py-2 px-4"
-    >Submit</button
+  <button
+    disabled={todo.trim().length === 0}
+    type="submit"
+    class="w-full shadow-sm rounded bg-blue-500 hover:bg-blue-600 text-white py-2 px-4">Submit</button
   >
 </form>

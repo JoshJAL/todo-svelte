@@ -1,4 +1,7 @@
+// All the ts-ignores are because of a silly type is not assignable to type: never[] error
+
 import { writable } from 'svelte/store';
+import { supabase } from '../supabase';
 
 export const todos = writable([]);
 
@@ -8,19 +11,50 @@ export type Todo = {
   id: number;
 };
 
-export function addTodo(text: string) {
+export async function loadTodos() {
+  let { data, error } = await supabase.from('todos').select('*');
+
+  if (error) {
+    alert('Oh no! Something went wrong. Please try again.\n' + error.message);
+  }
+
+  //@ts-ignore
+  todos.set(data);
+}
+
+export async function addTodo(text: string, user_id: string) {
+  text = text.trim();
+  const { data, error } = await supabase.from('todos').insert([{ text, user_id }]).select('*');
+
+  if (error) {
+    alert('Oh no! Something went wrong. Please try again.\n' + error.message);
+  }
+
   //@ts-ignore
   todos.update((current: Todo[]) => {
-    const newTodos = [...current, { text, completed: false, id: Date.now() }];
+    if (!data) return current;
+    const newTodos = [...current, data[0]];
     return newTodos;
   });
 }
 
-export function deleteTodo(id: number) {
+export async function deleteTodo(id: number) {
+  const { error } = await supabase.from('todos').delete().match({ id });
+
+  if (error) {
+    alert('Oh no! Something went wrong. Please try again.\n' + error.message);
+  }
+
   todos.update((todos) => todos.filter((todo: Todo) => todo.id !== id));
 }
 
-export function toggleTodoCompleted(id: number) {
+export async function toggleTodoCompleted(id: number, currentState: boolean) {
+  const { error } = await supabase.from('todos').update({ completed: !currentState }).match({ id });
+
+  if (error) {
+    alert('Oh no! Something went wrong. Please try again.\n' + error.message);
+  }
+
   //@ts-ignore
   todos.update((todos: Todo[]) => {
     let index = -1;
